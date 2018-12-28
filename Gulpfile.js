@@ -1,73 +1,87 @@
-var themename = 'humescores';
+"use strict";
 
-var gulp = require('gulp'),
-	// Prepare and optimize code etc
-	autoprefixer = require('autoprefixer'),
-	browserSync = require('browser-sync').create(),
-	image = require('gulp-image'),
-	jshint = require('gulp-jshint'),
-	postcss = require('gulp-postcss'),
-	sass = require('gulp-sass'),
-	sourcemaps = require('gulp-sourcemaps'),
+//Define the theme name
+const themename = 'humescores';
 
-	// Only work with new or updated files
-	newer = require('gulp-newer'),
+//Load Plugins
+const gulp          = require("gulp");
+const autoprefixer  = require("autoprefixer");
+const browsersync   = require("browser-sync").create();
+const immage        = require("gulp-image");
+const jshint        = require("gulp-jshint");
+const postcss       = require("gulp-postcss");
+const sass          = require("gulp-postcss");
+const sourcemaps    = require("gulp-sourcemaps");
 
-	// Name of working theme folder
-	root = '../' + themename + '/',
-	scss = root + 'sass/',
-	js = root + 'js/',
-	img = root + 'images/',
-	languages = root + 'languages/';
+//Work with newer or updated files
+const newer         = require("gulp-newer");
 
+// Name of working theme folder
+const root = '../' + themename + '/';
+const scss = root + 'sass/';
+const js = root + 'js/';
+const img = root + 'images/';
+const languages = root + 'languages/';
+
+// BrowserSync
+function browserSync(done) {
+  browsersync.init({
+    	open: 'local',
+	online: 'false',
+	proxy: 'humescores.dev',
+	port: 8080,
+    	tunnel: 'false',
+	browser: ["chrome", "firefox"]
+  });
+  done();
+}
 
 // CSS via Sass and Autoprefixer
-gulp.task('css', function() {
-	return gulp.src(scss + '{style.scss,rtl.scss}')
-	.pipe(sourcemaps.init())
-	.pipe(sass({
-		outputStyle: 'expanded', 
-		indentType: 'tab',
-		indentWidth: '1'
-	}).on('error', sass.logError))
-	.pipe(postcss([
-		autoprefixer('last 2 versions', '> 1%')
-	]))
-	.pipe(sourcemaps.write(scss + 'maps'))
-	.pipe(gulp.dest(root));
-});
+function css() {
+  return gulp
+    .src(scss + "{style.scss,rtl.scss}")
+    .pipe(sourcemaps.init())
+  	.pipe(sass({
+  		outputStyle: 'expanded',
+  		indentType: 'tab',
+  		indentWidth: '1'
+  	}).on('error', sass.logError))
+  	.pipe(postcss([
+  		autoprefixer('last 2 versions', '> 1%')
+  	]))
+  	.pipe(sourcemaps.write(scss + 'maps'))
+  	.pipe(gulp.dest(root));
+}
 
 // Optimize images through gulp-image
-gulp.task('images', function() {
-	return gulp.src(img + 'RAW/**/*.{jpg,JPG,png}')
-	.pipe(newer(img))
-	.pipe(image())
-	.pipe(gulp.dest(img));
-});
+function images() {
+  return gulp
+    .src(img + 'RAW/**/*.{jpg,JPG,png}')
+    .pipe(newer(img))
+    .pipe(image())
+  	.pipe(gulp.dest(img));
+}
 
 // JavaScript
-gulp.task('javascript', function() {
-	return gulp.src([js + '*.js'])
-	.pipe(jshint())
-	.pipe(jshint.reporter('default'))
-	.pipe(gulp.dest(js));
-});
+ function javascript() {
+   return gulp
+    .src([js + '*.js'])
+   	.pipe(jshint())
+   	.pipe(jshint.reporter('default'))
+   	.pipe(gulp.dest(js));
+ }
+
+ // Watch everything
+function watchFiles() {
+  gulp.watch([root + '**/*.css', root + '**/*.scss' ], css);
+	gulp.watch(js + '**/*.js', javascript);
+	gulp.watch(img + 'RAW/**/*.{jpg,JPG,png}', images);
+	gulp.watch(root + '**/*').on('change', browsersync.reload);
+}
 
 
-// Watch everything
-gulp.task('watch', function() {
-	browserSync.init({ 
-		open: 'external',
-		proxy: 'humescores.box',
-		port: 8080,
-                tunnel: 'humescores'
-	});
-	gulp.watch([root + '**/*.css', root + '**/*.scss' ], ['css']);
-	gulp.watch(js + '**/*.js', ['javascript']);
-	gulp.watch(img + 'RAW/**/*.{jpg,JPG,png}', ['images']);
-	gulp.watch(root + '**/*').on('change', browserSync.reload);
-});
+gulp.task("css", css);
+gulp.task("images", images);
+gulp.task("javascript", javascript);
 
-
-// Default task (runs at initiation: gulp --verbose)
-gulp.task('default', ['watch']);
+gulp.task("default", gulp.parallel(watchFiles, browserSync));
