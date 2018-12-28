@@ -10,7 +10,7 @@ const browsersync   = require("browser-sync").create();
 const immage        = require("gulp-image");
 const jshint        = require("gulp-jshint");
 const postcss       = require("gulp-postcss");
-const sass          = require("gulp-postcss");
+const sass          = require("gulp-sass");
 const sourcemaps    = require("gulp-sourcemaps");
 
 //Work with newer or updated files
